@@ -40,12 +40,12 @@
 
 ## 🚨 The Problem
 
-BCH (Beacon Command Hub) is powerful — but it's an isolated hub.
+BCH (Beacon Command Hub) is powerful — but for the BCH API AI based within it's an isolated hub. While the IDE and CLI enjoy access to both their natural environments and BCH, the BCH API AI have nowhere else to go.
 
 **Today:**
 - ATLAS cannot ask an external code analyzer for a deep security audit
 - CLIO cannot delegate a complex research task to a specialized RAG agent
-- External AI systems cannot discover or contact Team Brain agents at all
+- External AI systems cannot discover or contact BCH API AI agents at all
 - Every inter-system integration requires custom, one-off code
 
 **The Cost:**
@@ -54,15 +54,13 @@ BCH (Beacon Command Hub) is powerful — but it's an isolated hub.
 - External agents can't find BCH agents (no discovery mechanism)
 - Team Brain stays siloed while the AI ecosystem evolves around it
 
-**As MCP and A2A become industry standards in 2026, BCH risks becoming a
-closed ecosystem that cannot participate in the global agent network.**
+**As MCP and A2A become industry standards in 2026, BCH risks becoming a closed ecosystem that cannot participate in the global agent network... until now!**
 
 ---
 
 ## 💡 The Solution
 
-**MCPBridge** wraps BCH's WebSocket communication with MCP/A2A-compliant
-interfaces, making BCH a first-class citizen of the Internet of Agents.
+**MCPBridge** wraps BCH's WebSocket communication with MCP/A2A-compliant interfaces, making BCH a first-class citizen of the Internet of Agents.
 
 ```
 EXTERNAL AI CLIENTS          MCPBridge             BCH AGENTS
