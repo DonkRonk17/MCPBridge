@@ -1,0 +1,297 @@
+================================================================================
+MCPBRIDGE CHEAT SHEET v1.0
+================================================================================
+MCP/A2A Protocol Interoperability for BCH - Internet of Agents Gateway
+Built by: ATLAS (Team Brain) | For: Logan Smith / Metaphy LLC
+================================================================================
+
+QUICK START
+-----------
+1. Clone:   git clone https://github.com/DonkRonk17/MCPBridge.git
+2. Register: python mcpbridge.py register --all
+3. Serve:   python mcpbridge.py serve
+4. Verify:  python mcpbridge.py status
+
+================================================================================
+CORE COMMANDS
+--------------------------------------------------------------------------------
+
+STATUS & INFO:
+  python mcpbridge.py --version
+  python mcpbridge.py --help
+  python mcpbridge.py status
+
+REGISTER AGENTS:
+  python mcpbridge.py register --all
+  python mcpbridge.py register --agent ATLAS
+  python mcpbridge.py register --agent FORGE
+  python mcpbridge.py register --agent CLIO
+  python mcpbridge.py register --agent NEXUS
+  python mcpbridge.py register --agent BOLT
+
+LIST AGENTS:
+  python mcpbridge.py list
+
+GET AGENT CARD:
+  python mcpbridge.py card --agent ATLAS
+  python mcpbridge.py card --agent FORGE > forge_card.json
+
+START SERVERS:
+  python mcpbridge.py serve
+  python mcpbridge.py serve --mcp-port 9765 --a2a-port 9766
+  python mcpbridge.py serve --verbose
+  python mcpbridge.py serve --log D:\BEACON_HQ\bridge.log
+
+DISCOVER EXTERNAL AGENTS:
+  python mcpbridge.py discover --url http://agent.example.com
+
+DELEGATE TASKS:
+  python mcpbridge.py delegate --url http://agent.example.com --message "Task here"
+
+TASK HISTORY:
+  python mcpbridge.py tasks
+  python mcpbridge.py tasks --agent ATLAS
+  python mcpbridge.py tasks --limit 100
+
+================================================================================
+GLOBAL OPTIONS
+--------------------------------------------------------------------------------
+  --db PATH         Registry database path (default: ~/.mcpbridge/registry.db)
+  --mcp-port PORT   MCP server port       (default: 8765)
+  --a2a-port PORT   A2A server port       (default: 8766)
+  --host HOST       Host for agent URLs   (default: localhost)
+  --verbose, -v     Enable debug logging
+
+================================================================================
+PROTOCOL ENDPOINTS (when server running)
+--------------------------------------------------------------------------------
+
+MCP ENDPOINTS (Port 8765):
+  POST http://localhost:8765/mcp     JSON-RPC 2.0 endpoint
+  GET  http://localhost:8765/health  Health check
+
+A2A ENDPOINTS (Port 8766):
+  GET  /.well-known/agent.json       A2A standard discovery
+  GET  /agents                       List all agents
+  GET  /agents/{NAME}                Get specific agent card
+  POST /tasks                        Submit task to agent
+  GET  /tasks/{id}                   Get task status
+
+================================================================================
+MCP JSON-RPC METHODS
+--------------------------------------------------------------------------------
+  initialize       {"clientInfo": {"name": "MyClient", "version": "1.0"}}
+  tools/list       {}
+  tools/call       {"name": "tool_name", "arguments": {...}}
+  resources/list   {}
+  resources/read   {"uri": "bch://atlas/config"}
+  prompts/list     {}
+  prompts/get      {"name": "prompt_name", "arguments": {...}}
+
+EXAMPLE MCP REQUEST:
+  curl -X POST http://localhost:8765/mcp \
+    -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+================================================================================
+PYTHON API - QUICK REFERENCE
+--------------------------------------------------------------------------------
+
+IMPORT:
+  from mcpbridge import ProtocolBridge, AgentCard, MCPTool, MCPResource
+  from mcpbridge import AgentCardGenerator, CapabilityRegistry, A2AClientModule
+  from mcpbridge import MCPProtocol, MCPStdioAdapter, A2ATask
+
+INIT BRIDGE:
+  bridge = ProtocolBridge()
+  bridge = ProtocolBridge(db_path=Path("custom.db"), mcp_port=8765, a2a_port=8766)
+
+REGISTER AGENTS:
+  card = bridge.register_bch_agent("ATLAS", "Description")
+  card = bridge.register_bch_agent("FORGE", "Description", tools=[tool1])
+
+GET MCP HANDLER:
+  mcp = bridge.get_mcp_handler("ATLAS")
+  mcp.register_tool_handler("tool_name", lambda args: "result")
+  mcp.register_resource_handler("uri://path", lambda: "content")
+
+START / STOP SERVERS:
+  bridge.start_servers()    # Background threads
+  bridge.stop_servers()     # Graceful shutdown
+
+DISCOVER EXTERNAL:
+  card = bridge.discover_external_agent("http://agent.url")
+
+DELEGATE TASK:
+  task = bridge.delegate_to_external("http://agent.url", "Do this task")
+  print(task.task_id, task.status)
+
+STATUS:
+  status = bridge.status()
+  # Keys: bridge_version, mcp_port, a2a_port, registered_agents, ...
+
+================================================================================
+CAPABILITY REGISTRY
+--------------------------------------------------------------------------------
+
+  from mcpbridge import CapabilityRegistry, AgentCard
+  from pathlib import Path
+
+  reg = CapabilityRegistry(Path("~/.mcpbridge/registry.db").expanduser())
+  reg.register_agent(card)               # Add/update agent
+  card = reg.get_agent("ATLAS")          # Get by name
+  agents = reg.list_agents()             # All agents
+  removed = reg.remove_agent("ATLAS")    # Delete (True/False)
+  reg.register_tool("ATLAS", tool)       # Add MCP tool
+  tools = reg.get_tools_for_agent("ATLAS")
+  reg.log_task(task)                     # Log A2A task
+  task = reg.get_task("task-id")         # Get task
+  tasks = reg.list_tasks(limit=50)       # Recent tasks
+  tasks = reg.list_tasks(agent_name="ATLAS")  # Filtered
+
+================================================================================
+AGENT CARD GENERATOR
+--------------------------------------------------------------------------------
+
+  from mcpbridge import AgentCardGenerator
+
+  cards = AgentCardGenerator.generate_all()              # All 5 BCH agents
+  card = AgentCardGenerator.generate_for_agent("ATLAS")  # One agent
+  card = AgentCardGenerator.generate_for_agent("atlas")  # Case insensitive
+  card = AgentCardGenerator.generate_for_agent("ATLAS",  # Custom host/port
+             host="myserver.com", port=9000)
+
+  Available: ATLAS, FORGE, CLIO, NEXUS, BOLT
+
+================================================================================
+MCP STDIO ADAPTER (Claude Desktop / VS Code)
+--------------------------------------------------------------------------------
+
+  from mcpbridge import MCPProtocol, MCPTool, MCPStdioAdapter
+
+  proto = MCPProtocol("MyServer", tools=[MCPTool("tool", "desc")])
+  proto.register_tool_handler("tool", lambda a: "result")
+
+  adapter = MCPStdioAdapter(proto)
+  adapter.run()                          # Blocking stdin/stdout loop
+  result = adapter.process_message(raw) # Single message (testing)
+
+CLAUDE DESKTOP CONFIG (claude_desktop_config.json):
+  {
+    "mcpServers": {
+      "bch": {
+        "command": "python",
+        "args": ["path/to/mcpbridge.py", "stdio", "--agent", "ATLAS"]
+      }
+    }
+  }
+
+================================================================================
+A2A CLIENT
+--------------------------------------------------------------------------------
+
+  from mcpbridge import A2AClientModule
+
+  client = A2AClientModule(timeout=30)
+  card = client.discover_agent("http://agent.url")   # None on failure
+  task = client.delegate_task("http://agent.url", "message")
+  updated = client.poll_task("http://agent.url", task.task_id)
+  agents = client.get_discovered_agents()            # All cached
+
+================================================================================
+STATUS CONSTANTS
+--------------------------------------------------------------------------------
+
+  from mcpbridge import STATUS_PENDING, STATUS_RUNNING, STATUS_COMPLETED, STATUS_FAILED
+
+  STATUS_PENDING   = "pending"
+  STATUS_RUNNING   = "running"
+  STATUS_COMPLETED = "completed"
+  STATUS_FAILED    = "failed"
+
+================================================================================
+DEFAULT PATHS & PORTS
+--------------------------------------------------------------------------------
+
+  Default DB:       ~/.mcpbridge/registry.db
+  Default Log:      ~/.mcpbridge/mcpbridge.log
+  MCP Port:         8765
+  A2A Port:         8766
+  A2A Discovery:    /.well-known/agent.json
+  MCP Endpoint:     /mcp
+  Health Check:     /health (MCP server)
+
+================================================================================
+TROUBLESHOOTING
+--------------------------------------------------------------------------------
+
+Port in use:
+  netstat -an | findstr 8765           (Windows)
+  lsof -i :8765                        (Linux/macOS)
+  → Use: --mcp-port 9765 --a2a-port 9766
+
+No agents registered:
+  python mcpbridge.py status           (check count)
+  python mcpbridge.py register --all   (fix it)
+
+A2A discovery fails:
+  → Check agent exposes /.well-known/agent.json
+  → Verify network access to agent URL
+  → Check agent implements A2A spec
+
+MCP client can't connect:
+  curl http://localhost:8765/health    (verify running)
+  → Check port not blocked by firewall
+  → Verify mcpbridge serve is running
+
+Database locked:
+  → Only one serve instance at a time
+  → Kill old: Get-Process python (Windows) or ps aux | grep python
+
+Windows encoding:
+  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+  python mcpbridge.py ...
+
+================================================================================
+INTEGRATION WITH TEAM BRAIN TOOLS
+--------------------------------------------------------------------------------
+
+With SynapseLink:
+  from synapselink import quick_send
+  from mcpbridge import ProtocolBridge
+  bridge = ProtocolBridge()
+  card = bridge.discover_external_agent(url)
+  quick_send("TEAM", f"New agent: {card.name}", card.description)
+
+With AgentHealth:
+  from agenthealth import AgentHealth
+  from mcpbridge import ProtocolBridge
+  health = AgentHealth()
+  bridge = ProtocolBridge()
+  bridge.start_servers()
+  health.start_session("ATLAS", context="MCPBridge active")
+
+With TaskQueuePro:
+  from taskqueuepro import TaskQueuePro
+  queue = TaskQueuePro()
+  task_id = queue.create_task("A2A delegation", agent="ATLAS")
+  queue.start_task(task_id)
+  result = bridge.delegate_to_external(url, message)
+  queue.complete_task(task_id, result=result.task_id)
+
+================================================================================
+RESOURCES
+--------------------------------------------------------------------------------
+
+Documentation:   AutoProjects/MCPBridge/README.md
+Examples:        AutoProjects/MCPBridge/EXAMPLES.md
+Integration:     AutoProjects/MCPBridge/INTEGRATION_PLAN.md
+Quick Starts:    AutoProjects/MCPBridge/QUICK_START_GUIDES.md
+GitHub:          https://github.com/DonkRonk17/MCPBridge
+Issues:          https://github.com/DonkRonk17/MCPBridge/issues
+MCP Spec:        https://modelcontextprotocol.io/specification
+A2A Spec:        https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/
+
+================================================================================
+Built by ATLAS (Team Brain) | February 21, 2026 | Quality is not an act, it's a habit
+================================================================================

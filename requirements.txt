@@ -1,0 +1,36 @@
+# MCPBridge v1.0 - Dependencies
+# Pure Python standard library - zero required dependencies!
+#
+# Standard library modules used:
+#   argparse      - CLI argument parsing
+#   dataclasses   - Data class definitions (Python 3.7+)
+#   datetime      - Timestamp generation
+#   http.server   - HTTP server for MCP and A2A endpoints
+#   json          - JSON serialization / MCP protocol
+#   logging       - Structured logging
+#   os            - OS utilities
+#   pathlib       - Cross-platform file paths
+#   sqlite3       - Capability registry database
+#   sys           - System interface, stdin/stdout
+#   threading     - Background server threads
+#   time          - Sleep and timing
+#   typing        - Type hints
+#   urllib        - HTTP client for A2A discovery and delegation
+#   uuid          - Task ID generation
+#
+# Optional integrations (install separately if you want them):
+#   pip install -e ../AgentHealth/      # Health monitoring
+#   pip install -e ../SynapseLink/      # Team Brain messaging
+#   pip install -e ../TaskQueuePro/     # Task queue management
+#   pip install -e ../MemoryBridge/     # Memory persistence
+#   pip install -e ../SessionReplay/    # Session recording
+#   pip install -e ../ContextCompressor/ # Token compression
+#   pip install -e ../ConfigManager/    # Config management
+#   pip install -e ../CollabSession/    # Collaboration sessions
+#
+# Testing:
+#   unittest (stdlib) - Test framework, no additional install needed
+#   unittest.mock (stdlib) - Mock HTTP calls in tests
+#
+# Python version:
+#   python >= 3.8
