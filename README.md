@@ -1,3 +1,5 @@
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e65b95f2-c607-4b8d-afd4-51850f41049b" />
+
 # 🌐 MCPBridge
 
 > **MCP/A2A Protocol Interoperability for BCH — The Internet of Agents Gateway**
@@ -837,6 +839,9 @@ python mcpbridge.py status
 - [GitHub Issues](https://github.com/DonkRonk17/MCPBridge/issues)
 
 ---
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/92aea28b-7789-407d-b7da-aea09e748da1" />
+
 
 ## 🤝 Contributing
 
